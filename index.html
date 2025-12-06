@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Popover API Demo Playground | Interactive Components</title>
+  <meta name="description" content="Explore native popovers, dropdown menus, and interactive UI components with accessible keyboard navigation and smooth animations." />
+  
+  <style>
+    /* ============================================
+       CSS VARIABLES & DESIGN TOKENS
+       ============================================ */
+    :root {
+      /* Color Palette */
+      --color-bg-primary: #0f1724;
+      --color-bg-card: #0b1220;
+      --color-bg-surface: #0a1018;
+      --color-bg-panel: #ffffff;
+      --color-bg-hover: #f3f7f6;
+      --color-bg-dark-hover: #232e51;
+      
+      --color-text-primary: #e6eef8;
+      --color-text-muted: #94a3b8;
+      --color-text-dark: #07202a;
+      --color-text-inverse: #0b1220;
+      
+      --color-accent: #6ee7b7;
+      --color-border-light: rgba(255, 255, 255, 0.06);
+      --color-border-card: rgba(255, 255, 255, 0.03);
+      
+      /* Shadows */
+      --shadow-sm: 0 2px 8px rgba(2, 6, 23, 0.3);
+      --shadow-md: 0 8px 20px rgba(2, 6, 23, 0.6);
+      --shadow-lg: 0 10px 30px rgba(2, 6, 23, 0.12);
+      
+      /* Transitions */
+      --transition-base: 0.18s ease;
+      --transition-smooth: 0.3s ease;
+      
+      /* Layout */
+      --border-radius-sm: 6px;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --spacing-xs: 6px;
+      --spacing-sm: 8px;
+      --spacing-md: 14px;
+      --spacing-lg: 18px;
+      --spacing-xl: 28px;
+    }
+
+    /* ============================================
+       BASE STYLES
+       ============================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(180deg, #071021 0%, #071127 60%);
+      color: var(--color-text-primary);
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    /* ============================================
+       LAYOUT
+       ============================================ */
+    .wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    @media (max-width: 968px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================
+       TYPOGRAPHY
+       ============================================ */
+    h1 {
+      margin: 0 0 var(--spacing-xs) 0;
+      font-size: 26px;
+      font-weight: 600;
+    }
+
+    h2 {
+      margin: 0 0 var(--spacing-lg) 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    h3 {
+      margin: 0 0 var(--spacing-sm) 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .text-muted {
+      color: var(--color-text-muted);
+      font-size: 14px;
+    }
+
+    .text-small {
+      font-size: 13px;
+    }
+
+    /* ============================================
+       CARD COMPONENTS
+       ============================================ */
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      padding: var(--spacing-lg);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--color-border-card);
+    }
+
+    .demo-block {
+      background: var(--color-bg-surface);
+      padding: 16px;
+      border-radius: var(--border-radius-md);
+      min-width: 180px;
+      position: relative;
+    }
+
+    .demo-block__title {
+      margin-bottom: var(--spacing-sm);
+      font-weight: 600;
+    }
+
+    /* ============================================
+       BUTTON COMPONENTS
+       ============================================ */
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .btn {
+      padding: var(--spacing-sm) 12px;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-light);
+      color: var(--color-text-primary);
+      border-radius: var(--border-radius-md);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:focus {
+      outline: 3px solid rgba(110, 231, 183, 0.22);
+      outline-offset: 3px;
+    }
+
+    /* ============================================
+       CONTROL BAR
+       ============================================ */
+    .controls {
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--spacing-md);
+    }
+
+    /* ============================================
+       DEMO LAYOUT
+       ============================================ */
+    .demo-row {
+      display: flex;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* ============================================
+       POPOVER BASE STYLES
+       ============================================ */
+    [popover] {
+      background: var(--color-bg-panel);
+      color: var(--color-text-dark);
+      border-radius: var(--border-radius-md);
+      padding: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-lg);
+      width: 260px;
+      max-width: calc(100vw - 48px);
+      margin: 0;
+      
+      /* Animation */
+      opacity: 0;
+      transform: translateY(6px) scale(0.995);
+      transition: opacity var(--transition-base), 
+                  transform var(--transition-base),
+                  display var(--transition-base) allow-discrete,
+                  overlay var(--transition-base) allow-discrete;
+    }
+
+    [popover]:popover-open,
+    [popover][data-open="true"] {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    @starting-style {
+      [popover]:popover-open {
+        opacity: 0;
+        transform: translateY(6px) scale(0.995);
+      }
+    }
+
+    [popover]::backdrop {
+      background: rgba(2, 6, 23, 0.55);
+      backdrop-filter: blur(3px);
+      transition: background var(--transition-base),
+                  backdrop-filter var(--transition-base),
+                  display var(--transition-base) allow-discrete,
+                  overlay var(--transition-base) allow-discrete;
+    }
+
+    @starting-style {
+      [popover]::backdrop {
+        background: rgba(2, 6, 23, 0);
+        backdrop-filter: blur(0);
+      }
+    }
+
+    /* ============================================
+       ANCHOR POSITIONING
+       ============================================ */
+    @supports (anchor-name: --anchor) {
+      /* Menu dropdown anchor */
+      #menu-btn {
+        anchor-name: --menu-anchor;
+      }
+
+      #nav-menu {
+        position: absolute;
+        position-anchor: --menu-anchor;
+        top: anchor(bottom);
+        left: anchor(left);
+        translate: 0 8px;
+        margin: 0;
+      }
+
+      /* Profile menu anchor */
+      #profile-btn {
+        anchor-name: --profile-anchor;
+      }
+
+      #profile-pop {
+        position: absolute;
+        position-anchor: --profile-anchor;
+        top: anchor(bottom);
+        left: anchor(right);
+        translate: -100% 8px;
+        margin: 0;
+      }
+
+      /* Actions menu anchor */
+      #actions-btn {
+        anchor-name: --actions-anchor;
+      }
+
+      #actions {
+        position: absolute;
+        position-anchor: --actions-anchor;
+        top: anchor(bottom);
+        left: anchor(left);
+        translate: 0 8px;
+        margin: 0;
+      }
+    }
+
+    /* ============================================
+       DROPDOWN MENU VARIANT
+       ============================================ */
+    .dropdown {
+      padding: var(--spacing-sm);
+    }
+
+    .dropdown a {
+      display: block;
+      padding: var(--spacing-sm) 10px;
+      color: var(--color-text-dark);
+      text-decoration: none;
+      border-radius: var(--border-radius-sm);
+      transition: background var(--transition-base);
+    }
+
+    .dropdown a:hover,
+    .dropdown a:focus {
+      background: var(--color-bg-hover);
+      outline: none;
+    }
+
+    /* ============================================
+       TOOLTIP VARIANT
+       ============================================ */
+    .tooltip {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      font-size: 13px;
+      width: auto;
+      max-width: 200px;
+      background: var(--color-bg-card);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-light);
+      position: absolute;
+      inset: auto;
+      z-index: 1000;
+    }
+
+    /* ============================================
+       PROFILE MENU VARIANT
+       ============================================ */
+    .profile-menu {
+      padding: var(--spacing-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .profile-menu button {
+      background: transparent;
+      border: none;
+      padding: var(--spacing-sm);
+      text-align: left;
+      border-radius: var(--border-radius-sm);
+      color: var(--color-text-dark);
+    }
+
+    .profile-menu button:hover,
+    .profile-menu button:focus {
+      background: var(--color-bg-hover);
+      outline: none;
+    }
+
+    .profile-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6ee7b7 0%, #3b82f6 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .profile-text {
+      margin-left: var(--spacing-sm);
+      vertical-align: middle;
+    }
+
+    /* ============================================
+       ACTIONS MENU VARIANT
+       ============================================ */
+    .actions {
+      padding: var(--spacing-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .actions button {
+      background: transparent;
+      border: none;
+      padding: var(--spacing-sm);
+      text-align: left;
+      border-radius: var(--border-radius-sm);
+      color: var(--color-text-dark);
+    }
+
+    .actions button:hover,
+    .actions button:focus {
+      background: var(--color-bg-hover);
+      outline: none;
+    }
+
+    /* ============================================
+       NOTIFICATION VARIANT
+       ============================================ */
+    .notification {
+      background: var(--color-bg-dark-hover);
+      color: var(--color-text-primary);
+      padding: var(--spacing-sm) 12px;
+      border-radius: var(--border-radius-md);
+    }
+
+    /* ============================================
+       TOUR VARIANT (CENTERED)
+       ============================================ */
+    .tour {
+      max-width: 320px;
+      padding: 16px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      margin: 0;
+    }
+
+    .tour__actions {
+      margin-top: var(--spacing-sm);
+      display: flex;
+      gap: var(--spacing-sm);
+      justify-content: flex-end;
+    }
+
+    /* ============================================
+       SIDEBAR / INFO PANEL
+       ============================================ */
+    .info-section {
+      margin-top: 16px;
+    }
+
+    .info-section:first-child {
+      margin-top: 0;
+    }
+
+    .info-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .info-list li {
+      margin-bottom: var(--spacing-xs);
+    }
+
+    kbd {
+      background: var(--color-bg-surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    footer {
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    /* ============================================
+       FALLBACK STYLES (for browsers without Popover API)
+       ============================================ */
+    [data-popover] {
+      position: absolute;
+      display: none;
+    }
+
+    [data-popover][data-open="true"] {
+      display: block;
+    }
+
+    /* Tour centered in fallback mode */
+    #tour[data-open="true"] {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <!-- Header -->
+    <header>
+      <h1>Popover API — Demo Playground</h1>
+      <p class="text-muted">
+        Native popovers, anchor positioning, invoker commands, and progressive enhancement. 
+        Try the examples and test keyboard interactions.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- Main Content -->
+      <main class="card">
+        <h2>Interactive Demos</h2>
+
+        <!-- Control Bar -->
+        <div class="controls">
+          <button class="btn" id="resetAll">Reset (Close all popovers)</button>
+          <button class="btn" id="showToast">Show Notification</button>
+        </div>
+
+        <p class="text-muted text-small" style="margin-bottom: var(--spacing-md);">
+          Try Tab and Esc to test keyboard handling. The Reset button closes all open popovers.
+        </p>
+
+        <!-- Demo Row 1: Dropdown and Tooltip -->
+        <div class="demo-row">
+          <div class="demo-block">
+            <div class="demo-block__title">Dropdown Menu</div>
+            <button id="menu-btn" class="btn" popovertarget="nav-menu" popovertargetaction="toggle">
+              Menu ▾
+            </button>
+
+            <nav id="nav-menu" popover="auto" class="dropdown" aria-label="Main site menu">
+              <a href="#home">Home</a>
+              <a href="#services">Services</a>
+              <a href="#pricing">Pricing</a>
+              <a href="#contact">Contact</a>
+            </nav>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-block__title">Tooltip (hover/focus)</div>
+            <button class="btn" id="tooltip-trigger">Hover or focus me</button>
+            <div id="tip-1" popover="manual" class="tooltip" role="tooltip">
+              This button triggers a helpful tip.
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo Row 2: Profile and Actions -->
+        <div class="demo-row">
+          <div class="demo-block">
+            <div class="demo-block__title">Profile Menu (Anchored)</div>
+            <button 
+              id="profile-btn" 
+              class="btn"
+              popovertarget="profile-pop" 
+              popovertargetaction="toggle" 
+              aria-haspopup="true" 
+              aria-expanded="false"
+            >
+              <span class="profile-avatar" role="img" aria-label="User avatar">GA</span>
+              <span class="profile-text">Profile</span>
+            </button>
+
+            <div id="profile-pop" popover="auto" class="profile-menu">
+              <button>Account</button>
+              <button>Settings</button>
+              <button id="logoutBtn">Log out</button>
+            </div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-block__title">Actions Menu (Anchored)</div>
+            <button id="actions-btn" class="btn" popovertarget="actions" popovertargetaction="toggle">⋮</button>
+
+            <div id="actions" popover="auto" class="actions" aria-label="Item actions">
+              <button>Edit</button>
+              <button>Duplicate</button>
+              <button>Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo Row 3: Notification and Tour -->
+        <div class="demo-row">
+          <div class="demo-block">
+            <div class="demo-block__title">Auto-closing Notification</div>
+            <button class="btn" id="notifyBtn">Show Saved Notification</button>
+            <div id="notification" popover="manual" class="notification">
+              Saved! Your changes were stored.
+            </div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-block__title">Guided Tour (centered with backdrop)</div>
+            <button class="btn" popovertarget="tour" popovertargetaction="toggle">Start Tour</button>
+
+            <div id="tour" popover="auto" class="tour">
+              <strong>Welcome to the Tour!</strong>
+              <p style="margin: 8px 0;">This modal demonstrates how popovers can create centered guided steps with a backdrop overlay.</p>
+              <div class="tour__actions">
+                <button class="btn" popovertarget="tour" popovertargetaction="hide">Got it</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <p class="text-muted text-small">
+            This demo uses Popover API when available and provides small fallbacks when not. 
+            Anchor positioning is used for menus (when supported). The tour popup is centered on screen.
+          </p>
+        </footer>
+      </main>
+
+      <!-- Sidebar -->
+      <aside class="card">
+        <div class="info-section">
+          <h3>Status & Feature Checks</h3>
+          <p id="statusText" class="text-muted text-small">Detecting features…</p>
+        </div>
+
+        <div class="info-section">
+          <h3>Quick notes</h3>
+          <p class="text-muted text-small">
+            - Popover API gives :popover-open, ::backdrop, invoker commands<br>
+            - Anchor positioning drops menus below their buttons<br>
+            - Tour popup appears centered with backdrop<br>
+            - Reset button closes all open popovers
+          </p>
+        </div>
+
+        <div class="info-section">
+          <h3>How to test</h3>
+          <ol class="info-list text-muted text-small">
+            <li>Click <strong>Menu ▾</strong> to see it drop below the button.</li>
+            <li>Click <strong>Start Tour</strong> to see centered modal.</li>
+            <li>Use <kbd>Esc</kbd> to close any popover.</li>
+            <li>Click <strong>Reset</strong> to close all popovers at once.</li>
+            <li>Hover over the tooltip trigger.</li>
+          </ol>
+        </div>
+
+        <div class="info-section">
+          <h3>Source</h3>
+          <p class="text-muted text-small">
+            Examples inspired by Popover & Anchor Positioning specs and CSS-Tricks articles.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // POPOVER DEMO JAVASCRIPT
+    // ============================================
+    
+    const IS_DEV = false; // Set to true to enable debug logs
+
+    function devLog(...args) {
+      if (IS_DEV) console.log('[Popover Demo]', ...args);
+    }
+
+    /**
+     * Feature detection for Popover API and Anchor Positioning
+     */
+    const Features = {
+      popover: 'popover' in HTMLElement.prototype,
+      anchor: CSS && typeof CSS.supports === 'function' && CSS.supports('anchor-name: --test')
+    };
+
+    devLog('Feature detection:', Features);
+
+    /**
+     * DOM element references
+     */
+    const Elements = {
+      statusText: document.getElementById('statusText'),
+      resetAllBtn: document.getElementById('resetAll'),
+      showToastBtn: document.getElementById('showToast'),
+      notifyBtn: document.getElementById('notifyBtn'),
+      notification: document.getElementById('notification'),
+      menuBtn: document.getElementById('menu-btn'),
+      navMenu: document.getElementById('nav-menu'),
+      profileBtn: document.getElementById('profile-btn'),
+      profilePop: document.getElementById('profile-pop'),
+      logoutBtn: document.getElementById('logoutBtn'),
+      tooltipTrigger: document.getElementById('tooltip-trigger'),
+      tooltip: document.getElementById('tip-1'),
+      actionsBtn: document.getElementById('actions-btn')
+    };
+
+    /**
+     * Update status text with feature detection results
+     */
+    function updateStatusText() {
+      Elements.statusText.textContent = 
+        `Popover API: ${Features.popover ? '✓ supported' : '✗ not supported (fallbacks enabled)'} | ` +
+        `Anchor Positioning: ${Features.anchor ? '✓ supported' : '✗ not supported (fallback positioning used)'}`;
+    }
+
+    /**
+     * Close all open popovers (both native and fallback)
+     */
+    function closeAllPopovers() {
+      document.querySelectorAll('[popover]').forEach(popover => {
+        try {
+          if (Features.popover && typeof popover.hidePopover === 'function') {
+            if (popover.matches(':popover-open')) {
+              popover.hidePopover();
+            }
+          }
+          if (popover.hasAttribute('data-open')) {
+            popover.removeAttribute('data-open');
+          }
+        } catch (e) {
+          if (IS_DEV) console.warn('Error closing popover:', e);
+        }
+      });
+
+      // Reset all aria-expanded attributes
+      document.querySelectorAll('[popovertarget]').forEach(button => {
+        button.setAttribute('aria-expanded', 'false');
+      });
+      
+      devLog('All popovers closed');
+    }
+
+    /**
+     * Show notification with auto-close after 2 seconds
+     */
+    function showNotification() {
+      const notification = Elements.notification;
+      
+      if (Features.popover && typeof notification.showPopover === 'function') {
+        notification.showPopover();
+      } else {
+        notification.setAttribute('data-open', 'true');
+        positionFallback(notification, Elements.notifyBtn);
+      }
+
+      setTimeout(() => {
+        if (Features.popover && typeof notification.hidePopover === 'function') {
+          notification.hidePopover();
+        } else {
+          notification.removeAttribute('data-open');
+        }
+      }, 2000);
+    }
+
+    /**
+     * Position fallback popover near its invoker button
+     */
+    function positionFallback(popover, invoker) {
+      if (!invoker || !popover) return;
+      
+      // Don't reposition tour - it's centered
+      if (popover.id === 'tour') return;
+      
+      const invokerRect = invoker.getBoundingClientRect();
+      const popoverHeight = popover.offsetHeight || 120;
+      const spaceBelow = window.innerHeight - invokerRect.bottom;
+      
+      popover.style.position = 'absolute';
+      popover.style.left = `${invokerRect.left + window.scrollX}px`;
+      
+      if (spaceBelow > popoverHeight + 20) {
+        popover.style.top = `${invokerRect.bottom + window.scrollY + 8}px`;
+      } else {
+        popover.style.top = `${invokerRect.top + window.scrollY - popoverHeight - 8}px`;
+      }
+    }
+
+    /**
+     * Setup tooltip hover/focus behavior
+     */
+    function setupTooltip(trigger, tooltip) {
+      if (!trigger || !tooltip) return;
+
+      let hideTimeout;
+
+      const show = () => {
+        clearTimeout(hideTimeout);
+        if (Features.popover && typeof tooltip.showPopover === 'function') {
+          try {
+            tooltip.showPopover();
+          } catch (e) {
+            if (IS_DEV) console.warn('Error showing tooltip:', e);
+          }
+        } else {
+          tooltip.setAttribute('data-open', 'true');
+          positionFallback(tooltip, trigger);
+        }
+      };
+
+      const hide = () => {
+        hideTimeout = setTimeout(() => {
+          if (Features.popover && typeof tooltip.hidePopover === 'function') {
+            try {
+              tooltip.hidePopover();
+            } catch (e) {
+              if (IS_DEV) console.warn('Error hiding tooltip:', e);
+            }
+          } else {
+            tooltip.removeAttribute('data-open');
+          }
+        }, 200);
+      };
+
+      trigger.addEventListener('mouseenter', show);
+      trigger.addEventListener('mouseleave', hide);
+      trigger.addEventListener('focus', show);
+      trigger.addEventListener('blur', hide);
+      
+      tooltip.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+      tooltip.addEventListener('mouseleave', hide);
+    }
+
+    /**
+     * Setup invoker button (for fallback mode)
+     */
+    function setupInvoker(invoker) {
+      const targetId = invoker.getAttribute('popovertarget');
+      const target = targetId ? document.getElementById(targetId) : null;
+      
+      if (!target) return;
+
+      invoker.addEventListener('click', () => {
+        if (!Features.popover) {
+          const isOpen = target.getAttribute('data-open') === 'true';
+          
+          if (isOpen) {
+            target.removeAttribute('data-open');
+            invoker.setAttribute('aria-expanded', 'false');
+          } else {
+            closeAllPopovers();
+            target.setAttribute('data-open', 'true');
+            invoker.setAttribute('aria-expanded', 'true');
+            positionFallback(target, invoker);
+          }
+        }
+      });
+    }
+
+    /**
+     * Handle clicks outside popovers (fallback mode)
+     */
+    function handleOutsideClick(event) {
+      if (Features.popover) return;
+
+      const openPopover = document.querySelector('[data-open="true"]');
+      if (!openPopover) return;
+
+      if (openPopover.contains(event.target)) return;
+
+      const invokers = Array.from(document.querySelectorAll('[popovertarget]'));
+      const clickedInvoker = invokers.find(invoker => {
+        const targetId = invoker.getAttribute('popovertarget');
+        return targetId && document.getElementById(targetId) === openPopover && invoker.contains(event.target);
+      });
+
+      if (clickedInvoker) return;
+
+      openPopover.removeAttribute('data-open');
+      
+      invokers.forEach(invoker => {
+        const targetId = invoker.getAttribute('popovertarget');
+        if (targetId && document.getElementById(targetId) === openPopover) {
+          invoker.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    /**
+     * Handle Escape key (fallback mode)
+     */
+    function handleEscapeKey(event) {
+      if ((event.key === 'Escape' || event.key === 'Esc') && !Features.popover) {
+        closeAllPopovers();
+      }
+    }
+
+    /**
+     * Sync aria-expanded with native popover state (event-based)
+     */
+    function setupAriaSync() {
+      if (!Features.popover) return;
+
+      document.querySelectorAll('[popovertarget]').forEach(invoker => {
+        const targetId = invoker.getAttribute('popovertarget');
+        if (!targetId) return;
+
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        target.addEventListener('toggle', (e) => {
+          const isOpen = e.newState === 'open';
+          invoker.setAttribute('aria-expanded', String(isOpen));
+          devLog(`Popover ${targetId} ${isOpen ? 'opened' : 'closed'}`);
+        });
+      });
+    }
+
+    /**
+     * Initialize fallback popovers
+     */
+    function initFallbackPopovers() {
+      if (Features.popover) return;
+
+      document.querySelectorAll('[popover]').forEach(popover => {
+        popover.setAttribute('data-popover', 'true');
+        popover.removeAttribute('data-open');
+      });
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+
+    Elements.resetAllBtn.addEventListener('click', closeAllPopovers);
+    Elements.showToastBtn.addEventListener('click', showNotification);
+    Elements.notifyBtn.addEventListener('click', showNotification);
+
+    Elements.logoutBtn.addEventListener('click', () => {
+      alert('Logging out (demo)');
+      closeAllPopovers();
+    });
+
+    setupTooltip(Elements.tooltipTrigger, Elements.tooltip);
+    document.querySelectorAll('[popovertarget]').forEach(setupInvoker);
+
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    updateStatusText();
+    initFallbackPopovers();
+    setupAriaSync();
+
+    devLog('Demo initialized successfully');
+  </script>
+</body>
+</html>
