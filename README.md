@@ -25,7 +25,7 @@ This project showcases modern web UI patterns using the native **Popover API**, 
 
 ## 🚀 Demo
 
-[**View Live Demo**](https://your-username.github.io/popover-api-demo/) *(Update with your GitHub Pages URL)*
+[**View Live Demo**](https://github.com/BboyGT/PopOver-API) *(Update with your GitHub Pages URL)*
 
 ## 📋 Components Included
 
